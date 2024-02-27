@@ -21,9 +21,7 @@
     - name: build container image
       docker_image:
         name: mywebapp
-        build:
-          path: "{{ playbook_dir }}"
-        source: build
+        path: "{{ playbook_dir }}"
         state: present
 
     - name: Add docker_service for the Ansible Container
@@ -32,5 +30,5 @@
         name: My-container
         image: mywebapp
         volumes:
-          - "/boxfuse/boxfuse-sample-java-war-hello/target/hello-1.0.war:/tmp/"
+          - "/boxfuse/boxfuse-sample-java-war-hello/target/:/tmp/"
         state: present
