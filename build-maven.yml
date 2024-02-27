@@ -21,7 +21,9 @@
     - name: build container image
       docker_image:
         name: mywebapp
-        path: "{{ playbook_dir }}"
+        build:
+          path: "{{ playbook_dir }}"
+        source: build
         state: present
 
     - name: Add docker_service for the Ansible Container
