@@ -1,0 +1,5 @@
+---
+# defaults file for tomcat
+path_tomcat: /opt/tomcat
+path_artifact: /var/lib/docker/volumes/ansible_boxfuse_web_data/_data/hello-1.0.war
+target_dir: /opt/tomcat/webapps

@@ -1,0 +1,7 @@
+---
+# handlers file for maven
+- name: Start docker service on the staging machine
+  service:
+    name: docker
+    state: started
+    enabled: true

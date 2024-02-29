@@ -1,0 +1,10 @@
+---
+# tasks file for common
+- name: install packages
+  apt:
+    pkg:
+      - mc
+      - default-jdk
+      - git
+    state: latest
+    update_cache: true

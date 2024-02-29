@@ -1,0 +1,118 @@
+---
+# tasks file for tomcat
+    - name: Checking the existence on the file {{ path_tomcat }}/bin/catalina.sh
+      stat:
+        path: "{{ path_tomcat }}/bin/catalina.sh"
+      register: stat_result
+    - block:
+        - name: Install openJDK on the Production machine
+          become: true
+          apt:
+            pkg:
+              - default-jdk
+            state: latest
+            update_cache: true
+
+        - name: Create a workind directory on the Production machine
+          file:
+            path: "{{ playbook_dir }}"
+            state: directory
+            mode: 0755
+            owner: root
+            group: root
+          tags: pre-install
+
+        - name: Checking the existence on the file {{ path_tomcat }}/bin/catalina.sh
+          stat:
+            path: "{{ path_tomcat }}/bin/catalina.sh"
+          register: file_data
+
+        - name: Download Tomcat a workind directory on the Production machine
+          get_url:
+            url: https://archive.apache.org/dist/tomcat/tomcat-10/v10.1.19/bin/apache-tomcat-10.1.19.tar.gz
+            dest: "{{ playbook_dir }}"
+          tags: pre-install
+
+        - name: Create directory for Tomcat on the Production machine
+          file:
+            path: "{{ path_tomcat }}"
+            state: directory
+            owner: tomcat
+            group: tomcat
+            mode: '0755'
+          tags: pre-install
+
+        - name: Extract archive Tomcat on the Production machine
+          unarchive:
+            src: "{{ playbook_dir }}/apache-tomcat-10.1.19.tar.gz"
+            dest: "{{ path_tomcat }}"
+            extra_opts: [--strip-components=1]
+            remote_src: yes
+            owner: tomcat
+            group: tomcat
+            mode: "u+rwx,g+rx,o=rx"
+          tags: tomcat-install
+
+        - name: Remove the working directory on the Production machine
+          ansible.builtin.file:
+            path: "{{ playbook_dir }}"
+            state: absent
+          tags: post-install
+      when: not stat_result.stat.exists
+
+    - name: Create tomcat group
+      group:
+        name: tomcat
+        system: yes
+        state: present
+
+    - name: Create tomcat user
+      user:
+        name: tomcat
+        group: tomcat
+        password: pa$$w0rd
+        home: "{{ path_tomcat }}"
+        shell: "/bin/bash"
+
+    - name: Change owner & group of tomcat directory
+      file:
+        path: "{{ path_tomcat }}"
+        owner: tomcat
+        group: tomcat
+        recurse: yes
+
+    - name: Create empty Tomcat service file /etc/systemd/system/tomcat.service
+      file:
+        path: /etc/systemd/system/tomcat.service
+        state: touch
+
+    - name: Add tomcat service details in /etc/systemd/system/tomcat.service
+      blockinfile:
+        path: /etc/systemd/system/tomcat.service
+        block: |
+          [Unit]
+          Description=Tomcat 10
+          After=network.target
+
+          [Service]
+          Type=forking
+          User=tomcat
+          Group=tomcat
+          Environment="JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64"
+          Environment="JAVA_OPTS=-Djava.security.egd=file:///dev/urandom"
+          Environment="CATALINA_BASE={{ path_tomcat }}"
+          Environment="CATALINA_HOME={{ path_tomcat }}"
+          Environment="CATALINA_PID={{ path_tomcat }}/temp/tomcat.pid"
+          Environment="CATALINA_OPTS=-Xms512M -Xmx1024M -server -XX:+UseParallelGC"
+          ExecStart={{ path_tomcat }}/bin/startup.sh
+          ExecStop={{ path_tomcat }}/bin/shutdown.sh
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Transfer war-file from staging to production server
+      synchronize:
+        src: "{{ path_artifact }}"
+        dest: "{{ target_dir }}"
+      delegate_to: "{{ groups['staging'][0] }}"
+      tags: Copy artefact

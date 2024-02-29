@@ -1,0 +1,5 @@
+---
+- name: Playbook for the Maven role
+  import_playbook: roles-maven.yml
+- name: Playbook for the Tomcat role
+  import_playbook: roles-tomcat.yml

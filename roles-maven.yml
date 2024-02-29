@@ -1,0 +1,8 @@
+---
+- name: Maven configuration
+  hosts: staging
+  become: yes
+
+  roles:
+   - common
+   - maven

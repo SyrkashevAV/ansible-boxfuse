@@ -1,0 +1,8 @@
+---
+- name: Tomcat configuration
+  hosts: production
+  become: yes
+
+  roles:
+   - common
+   - tomcat
