@@ -1,13 +1,13 @@
 ---
 # tasks file for maven
 - name: Install Docker, python3-pip, openJDK and git on the staging machine
-    become: true
-    apt:
-      pkg:
-        - docker.io
-        - python3-pip
-      state: latest
-      update_cache: true
+  become: true
+  apt:
+    pkg:
+      - docker.io
+      - python3-pip
+    state: latest
+    update_cache: true
 
   - name: Install docker-compose on the staging machine
     get_url:
