@@ -40,11 +40,21 @@
     - docker-compose.yml
 
 - name: Start container using docker-compose on the staging machine
-  become: true
-  shell:
-    cmd: "docker-compose up -d"
-  args:
-    chdir: "{{ playbook_dir }}"
+  hosts: staging
+  gather_facts: no
+  tasks:
+
+    - docker_compose:
+        definition:
+          version: "3"
+          services:
+            maven:
+            build:
+              context: .
+              dockerfile: Dockerfile
+            container_name: maven
+            volumes:
+              - web_data:/boxfuse/boxfuse-sample-java-war-hello/target/
 
 - name: Remove the build directory on the staging machine
   ansible.builtin.file:
